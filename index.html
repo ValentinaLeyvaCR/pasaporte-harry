@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pasaporte Mágico</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lora:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- Configuración Global --- */
+        body, html {
+            margin: 0; padding: 0; font-family: 'Lora', serif; overflow: hidden; height: 100%; background-color: #fdf5e6; /* Color Pergamino Base */ touch-action: manipulation; color: #333;
+        }
+
+        /* --- Contenedor de Páginas --- */
+        .page {
+            width: 100%; height: 100vh; position: absolute; top: 0; left: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.5s ease; visibility: hidden; opacity: 0; padding: 20px; box-sizing: border-box; line-height: 1.7;
+            /* Textura pergamino sutil (la versión que funcionaba) */
+             background-image: linear-gradient(rgba(211, 199, 178, 0.2) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(211, 199, 178, 0.2) 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-color: #fdf5e6; /* Fondo pergamino */
+        }
+        
+        .page.active { visibility: visible; opacity: 1; }
+        
+        h1 { font-family: 'Playfair Display', serif; font-size: 2.5em; color: #4a2c00; text-align: center; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); }
+        p { font-size: 1.2em; text-align: center; color: #5d4037; }
+
+        /* --- Botones Mágicos --- */
+        .magic-button {
+            background: #0d1a26; border: 1px solid #d3a625; color: #d3a625; padding: 15px 30px; font-size: 1em; font-family: 'Lora', serif; font-weight: 700; border-radius: 50px; cursor: pointer; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); transition: all 0.3s ease; -webkit-tap-highlight-color: transparent; width: 90%; max-width: 320px; text-align: center; margin-bottom: 15px;
+        }
+        .magic-button:hover { background: #1a364d; color: #fff; box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3), 0 0 15px #d3a625; transform: translateY(-2px); }
+        .magic-button:active { transform: translateY(1px); }
+        a.magic-button { text-decoration: none; box-sizing: border-box; }
+
+        @keyframes fadeIn { to { opacity: 1; } }
+        #page-bienvenida .animated-message { font-size: 1.3em; color: #4a2c00; opacity: 0; animation: fadeIn 2s ease 1s forwards; }
+        #page-portada .logo { width: 250px; max-width: 80%; border-radius: 10px; margin-bottom: 20px; }
+        #page-historia { overflow-y: auto; justify-content: flex-start; }
+        .historia-container { display: flex; flex-direction: column; gap: 20px; align-items: center; justify-content: flex-start; width: 100%; }
+        .historia-container img { width: 280px; max-width: 70%; margin-top: 10px; filter: drop-shadow(2px 2px 5px rgba(0,0,0,0.2)); }
+        .cuento-bloque { background: transparent; width: 90%; max-width: 500px; font-size: 1.1em; line-height: 1.6; color: #333; text-align: center; }
+        .historia-botones { margin-top: 15px; display: flex; flex-direction: column; gap: 15px; width: 100%; align-items: center; padding-bottom: 30px; }
+        #sorpresa-popup { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; visibility: hidden; opacity: 0; transition: all 0.3s ease; z-index: 100; padding: 20px; box-sizing: border-box; }
+        #sorpresa-popup.active { visibility: visible; opacity: 1; }
+        .sorpresa-content { position: relative; padding: 30px 20px; border: 2px solid #d3a625; border-radius: 5px; box-shadow: 0 0 30px rgba(0,0,0,0.5); text-align: center; width: 90%; max-width: 500px; background: #111; }
+        #typewriter-text { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.5em; color: #d3a625; line-height: 1.6; text-shadow: 1px 1px #000; }
+        .close-popup { position: absolute; top: 5px; right: 10px; font-size: 40px; color: #d3a625; cursor: pointer; background: none; border: none; width: auto; box-shadow: none; margin-bottom: 0; }
+        @keyframes fall { 0% { top: -10%; opacity: 0; } 50% { opacity: 1; } 100% { top: 110%; opacity: 0; } }
+        .sparkle { position: absolute; font-size: 1em; animation: fall linear infinite; top: -10%; color: #d3a625; text-shadow: 0 0 10px #d3a625, 0 0 5px #fff; }
+        #page-cierre { background-color: #0d1a26; /* Azul Noche Oscuro */ }
+        #page-cierre .logo { width: 200px; max-width: 70%; border-radius: 10px; }
+        #page-cierre .lema { font-size: 1.1em; color: #aaa; margin-top: -15px; }
+        #page-cierre .frase-final { font-size: 1.3em; color: #d3a625; font-family: 'Playfair Display', serif; margin-top: 30px; margin-bottom: 30px; }
+        #page-certificado { overflow-y: auto; justify-content: flex-start; background-color: #fdf5e6; /* Fondo pergamino explícito */ }
+        .certificado-content { width: 95%; max-width: 700px; background: #fffaf0; border: 5px double #5d4037; border-radius: 3px; padding: 20px; box-sizing: border-box; text-align: left; color: #333; margin-top: 20px; }
+        .certificado-content h1 { color: #4a2c00; font-size: 1.5em; text-shadow: none; text-align: center; border-bottom: 1px solid #b9936c; padding-bottom: 10px; }
+        .certificado-body { font-size: 1.1em; line-height: 2; margin-top: 20px; margin-bottom: 30px; }
+        .campo-rellenable { font-weight: 700; color: #000; font-size: 1.1em; background: #f0f8ff; padding: 2px 8px; border-radius: 5px; border-bottom: 1px dashed #5d4037; }
+        
+    </style>
+</head>
+<body>
+
+    <div id="page-bienvenida" class="page active">
+        <h1>¡Felicidades!</h1>
+        <p class="animated-message">Has sido aceptado...</p>
+        <button id="btn-comenzar" class="magic-button">💌 Recibir mi Carta</button>
+    </div>
+
+    <div id="page-portada" class="page">
+        <img src="logo.png" alt="Logo Trapo de Luz" class="logo"> 
+        <h1>Pasaporte Mágico</h1>
+        <button id="btn-entrar" class="magic-button">Entrar al Mundo Mágico</button>
+    </div>
+
+    <div id="page-historia" class="page">
+        <div class="historia-container">
+            <img src="hogwarts_escudo.png" alt="Escudo de Hogwarts"> 
+            <div class="cuento-bloque">
+                <p>¡Bienvenido a Hogwarts! Tu muñeco mágico ha llegado para comenzar la aventura.</p>
+                <p><strong>Descubre sus secretos...</strong></p>
+            </div>
+        </div>
+        <div class="historia-botones">
+            <button id="btn-certificado" class="magic-button">📜 Ver Carta de Aceptación</button>
+            <button id="btn-sorpresa" class="magic-button">🎩 Sombrero Seleccionador</button>
+            <a href="https://www.instagram.com/trapodeluz/" target="_blank" class="magic-button">📸 Ver más Magos</a>
+        </div>
+    </div>
+
+    <div id="page-cierre" class="page">
+        <img src="logo.png" alt="Logo Trapo de Luz" class="logo"> 
+        <p class="lema">"Cada trapo, una historia; cada historia, una sonrisa."</p>
+        <p class="frase-final">Travesura Realizada ✨</p>
+        <button id="btn-inicio" class="magic-button">🏠 Volver al Inicio</button>
+    </div>
+
+    <div id="page-certificado" class="page">
+        <div class="certificado-content">
+            <h1>Colegio Hogwarts de Magia y Hechicería</h1>
+            <div class="certificado-body">
+                Estimado/a <span class="campo-rellenable" id="cert-nombre">[Nombre del Mago]</span>,
+                <br><br>
+                Tenemos el placer de informarle que ha adoptado oficialmente a <span class="campo-rellenable" id="cert-muneco">[Nombre del Muñeco]</span> y ha sido aceptado en el Colegio Hogwarts de Magia y Hechicería.
+                <br><br>
+                Firmado el <span class="campo-rellenable" id="cert-fecha">[Fecha Mágica]</span>,
+                <br><br>
+                Atentamente,<br>
+                <strong>El Ministerio de Magia (Sección Trapo de Luz)</strong>
+            </div>
+            <button id="btn-volver-historia" class="magic-button">Volver</button>
+        </div>
+    </div>
+
+    <div id="sorpresa-popup">
+        <div id="sparkle-container"></div>
+        <div class="sorpresa-content">
+            <button class="close-popup" id="btn-cerrar-popup">&times;</button>
+            <div id="typewriter-text"></div>
+        </div>
+    </div>
+
+    <audio id="sound-background" src="harry_fondo.mp3" loop preload="auto"></audio>
+    <audio id="sound-magic" src="harry_magia.mp3" preload="auto"></audio>
+    <audio id="sound-click" src="harry_click.mp3" preload="auto"></audio>
+    <audio id="sound-bounce" src="harry_rebote.mp3" preload="auto"></audio>
+
+
+    <script>
+        // --- Referencias a Elementos ---
+        const pages = document.querySelectorAll('.page');
+        const btnComenzar = document.getElementById('btn-comenzar');
+        const btnEntrar = document.getElementById('btn-entrar');
+        const btnSorpresa = document.getElementById('btn-sorpresa');
+        const btnInicio = document.getElementById('btn-inicio');
+        const btnCerrarPopup = document.getElementById('btn-cerrar-popup');
+        const popup = document.getElementById('sorpresa-popup');
+        const btnCertificado = document.getElementById('btn-certificado');
+        const btnVolverHistoria = document.getElementById('btn-volver-historia');
+        
+        const soundMagic = document.getElementById('sound-magic');
+        const soundClick = document.getElementById('sound-click');
+        const soundBounce = document.getElementById('sound-bounce');
+        const soundBackground = document.getElementById('sound-background');
+        
+        // --- Variables de Estado ---
+        let audioUnlocked = false;
+        
+        // --- Funciones de Audio ---
+        function unlockAllAudio() {
+            console.log("Intentando desbloquear audio...");
+            if (audioUnlocked) {
+                console.log("Audio ya desbloqueado.");
+                return Promise.resolve(); 
+            }
+            
+            const allSounds = [soundMagic, soundClick, soundBounce, soundBackground];
+            const promises = []; 
+            
+            allSounds.forEach(sound => {
+                if (!sound) {
+                    console.error("Error: Elemento de audio no encontrado.");
+                    return; 
+                }
+                const promise = sound.play()
+                    .then(() => {
+                        sound.pause();
+                        sound.currentTime = 0;
+                        console.log(`Audio ${sound.id} desbloqueado.`);
+                    })
+                    .catch(error => {
+                        console.warn(`No se pudo desbloquear ${sound.id}. Error: ${error.message}`);
+                    });
+                promises.push(promise);
+            });
+            
+            return Promise.allSettled(promises).then(() => {
+                audioUnlocked = true;
+                console.log("Desbloqueo de audio completado.");
+                if (soundBackground && soundBackground.paused) {
+                    soundBackground.volume = 0.3; 
+                    soundBackground.play().catch(e => console.error("Error al iniciar música de fondo:", e.message));
+                }
+            });
+        }
+        
+        function playSound(sound, reset = true) {
+            console.log(`Intentando reproducir ${sound ? sound.id : 'sonido nulo'}`);
+            if (!audioUnlocked) {
+                console.log("Audio no desbloqueado, reproducción cancelada.");
+                return;
+            }
+            if (!sound) {
+                console.error("Error: Intentando reproducir un sonido que no existe.");
+                return;
+            }
+            
+            sound.play()
+                .then(() => {
+                    if (reset) {
+                        sound.currentTime = 0;
+                    }
+                    console.log(`Reproduciendo ${sound.id}`);
+                })
+                .catch(error => {
+                    console.error(`Error al reproducir ${sound.id}: ${error.message}`);
+                });
+        }
+        
+        // --- Función de Navegación ---
+        function goToPage(pageId) {
+            console.log(`Navegando a: ${pageId}`);
+            pages.forEach(page => {
+                page.classList.remove('active');
+            });
+            const newPage = document.getElementById(pageId);
+            if (newPage) {
+                newPage.classList.add('active');
+                newPage.scrollTop = 0;
+                console.log(`Página ${pageId} activada.`);
+            } else {
+                console.error(`Error: No se encontró la página con ID ${pageId}`);
+            }
+        }
+
+        // --- Event Listeners (con verificación) ---
+        
+        if (btnComenzar) {
+            btnComenzar.addEventListener('click', (e) => {
+                e.stopPropagation();
+                console.log("Botón Comenzar clickeado.");
+                unlockAllAudio().then(() => {
+                     if(audioUnlocked) playSound(soundMagic); 
+                     setTimeout(() => { goToPage('page-portada'); }, 100); 
+                });
+            });
+        } else { console.error("Error: Botón 'btn-comenzar' no encontrado."); }
+
+        if (btnEntrar) {
+            btnEntrar.addEventListener('click', (e) => { e.stopPropagation(); playSound(soundClick); goToPage('page-historia'); });
+        } else { console.error("Error: Botón 'btn-entrar' no encontrado."); }
+
+        if (btnInicio) {
+            btnInicio.addEventListener('click', (e) => { e.stopPropagation(); playSound(soundBounce); goToPage('page-bienvenida'); });
+        } else { console.error("Error: Botón 'btn-inicio' no encontrado."); }
+
+        if (btnSorpresa) {
+            btnSorpresa.addEventListener('click', (e) => {
+                e.stopPropagation();
+                playSound(soundMagic);
+                if (popup) popup.classList.add('active'); else console.error("Popup no encontrado");
+                startSparkleRain();
+                const textoSorpresa = "¡Hmm, difícil! ¡Lleno de valor, y una gran bondad! Tu casa es... ¡HOGWARTS! ✨";
+                startTypewriter(textoSorpresa, 'typewriter-text');
+            });
+        } else { console.error("Error: Botón 'btn-sorpresa' no encontrado."); }
+
+        if (btnCerrarPopup) {
+            btnCerrarPopup.addEventListener('click', (e) => { e.stopPropagation(); if (popup) popup.classList.remove('active'); stopSparkleRain(); });
+        } else { console.error("Error: Botón 'btn-cerrar-popup' no encontrado."); }
+        
+        function popularCertificado() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const nombre = urlParams.get('nombre'); const muneco = urlParams.get('muneco'); const fecha = urlParams.get('fecha');
+            const elNombre = document.getElementById('cert-nombre'); const elMuneco = document.getElementById('cert-muneco'); const elFecha = document.getElementById('cert-fecha');
+            if (elNombre) { if (nombre) { elNombre.textContent = nombre; } else { elNombre.textContent = "[Nombre del Mago]"; } } else { console.error("Elemento cert-nombre no encontrado"); }
+            if (elMuneco) { if (muneco) { elMuneco.textContent = muneco; } else { elMuneco.textContent = "[Nombre del Muñeco]"; } } else { console.error("Elemento cert-muneco no encontrado"); }
+            if (elFecha) { if (fecha) { elFecha.textContent = fecha; } else { elFecha.textContent = "[Fecha Mágica]"; } } else { console.error("Elemento cert-fecha no encontrado"); }
+        }
+        
+        if (btnCertificado) {
+            btnCertificado.addEventListener('click', (e) => { e.stopPropagation(); playSound(soundClick); popularCertificado(); goToPage('page-certificado'); });
+        } else { console.error("Error: Botón 'btn-certificado' no encontrado."); }
+
+        if (btnVolverHistoria) {
+            btnVolverHistoria.addEventListener('click', (e) => { e.stopPropagation(); playSound(soundClick); goToPage('page-historia'); });
+        } else { console.error("Error: Botón 'btn-volver-historia' no encontrado."); }
+        
+        /* --- Funciones de Efectos --- */
+        function startTypewriter(txt, elementId) { let i = 0; const speed = 90; const target = document.getElementById(elementId); if (!target) { console.error(`Elemento ${elementId} no encontrado para typewriter`); return; } target.innerHTML = ''; function type() { if (txt.substring(i, i + 4).toLowerCase() === '<br>') { target.innerHTML += '<br>'; i += 4; } if (i < txt.length) { target.innerHTML += txt.charAt(i); i++; setTimeout(type, speed); } } type(); }
+        const sparkleContainer = document.getElementById('sparkle-container'); let rainInterval; const sparkleChars = ['✨', '🌟', '•'];
+        function startSparkleRain() { stopSparkleRain(); rainInterval = setInterval(createSparkle, 150); }
+        function stopSparkleRain() { clearInterval(rainInterval); if (sparkleContainer) { sparkleContainer.innerHTML = ''; } }
+        function createSparkle() { const sparkle = document.createElement('div'); sparkle.classList.add('sparkle'); sparkle.innerText = sparkleChars[Math.floor(Math.random() * sparkleChars.length)]; sparkle.style.left = Math.random() * 100 + 'vw'; sparkle.style.animationDuration = (Math.random() * 3) + 4 + 's'; if (sparkleContainer) { sparkleContainer.appendChild(sparkle); } setTimeout(() => { sparkle.remove(); }, 7000); }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM cargado. Harry Potter listo.");
+        });
+    </script>
+</body>
+</html>
